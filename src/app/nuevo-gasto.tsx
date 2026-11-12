@@ -4,6 +4,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -65,6 +66,7 @@ export default function NuevoGasto() {
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const scrollRef = useRef<ScrollView>(null);
   const known = useRef<{ acc: Set<number>; cat: Set<number> } | null>(null);
   const pending = useRef<"from" | "to" | null>(null);
 
@@ -220,7 +222,8 @@ export default function NuevoGasto() {
   const toList = accounts.filter((a) => a.id !== accountId);
 
   return (
-    <View
+    <KeyboardAvoidingView
+      behavior="padding"
       style={{
         flex: 1,
         backgroundColor: colors.background,
@@ -228,6 +231,7 @@ export default function NuevoGasto() {
       }}
     >
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
@@ -365,7 +369,13 @@ export default function NuevoGasto() {
             accessibilityLabel="Nota"
             value={note}
             onChangeText={setNote}
-            onFocus={() => setNoteFocused(true)}
+            onFocus={() => {
+              setNoteFocused(true);
+              setTimeout(
+                () => scrollRef.current?.scrollToEnd({ animated: true }),
+                150,
+              );
+            }}
             onBlur={() => setNoteFocused(false)}
             placeholder="Agregar nota"
             placeholderTextColor={colors.textMuted}
@@ -416,7 +426,7 @@ export default function NuevoGasto() {
       <View
         style={{
           paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 12,
+          paddingBottom: noteFocused ? 12 : insets.bottom + 12,
           gap: 10,
         }}
       >
@@ -429,6 +439,6 @@ export default function NuevoGasto() {
           <AmountKeypad onKey={(k) => setRaw((r) => applyKey(r, k))} />
         )}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
